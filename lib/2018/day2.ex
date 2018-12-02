@@ -23,4 +23,34 @@ defmodule AoC.Year2018.Day2 do
 
     count2 * count3
   end
+
+  def common(input) do
+    box_ids =
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.trim/1)
+
+    Enum.reduce_while(
+      box_ids,
+      {0, length(box_ids) - 1},
+      fn id_a, {a_pos, rest} ->
+        common_list =
+          box_ids
+          |> Enum.slice(a_pos + 1, rest)
+          |> Enum.map(fn id_b ->
+            String.myers_difference(id_a, id_b)
+            |> Keyword.get_values(:eq)
+            |> Enum.join()
+          end)
+          |> Enum.filter(fn common ->
+            String.length(common) == String.length(id_a) - 1
+          end)
+
+        case common_list do
+          [] -> {:cont, {a_pos + 1, rest - 1}}
+          [common] -> {:halt, common}
+        end
+      end
+    )
+  end
 end

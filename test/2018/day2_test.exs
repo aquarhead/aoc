@@ -15,4 +15,18 @@ defmodule AoC.Year2018.Day2Test do
 
     assert 12 == checksum(input)
   end
+
+  test "common" do
+    input = """
+    abcde
+    fghij
+    klmno
+    pqrst
+    fguij
+    axcye
+    wvxyz
+    """
+
+    assert "fgij" == common(input)
+  end
 end
