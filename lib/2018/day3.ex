@@ -130,28 +130,49 @@ defmodule AoC.Year2018.Day3 do
         {start_x, start_x + width - 1, start_y, start_y + height - 1}
       }
     end)
-    |> remove_overlap()
+    |> remove_overlap([])
   end
 
-  defp remove_overlap([{id, _}]), do: id
+  defp remove_overlap([{id, _}], _), do: id
 
-  defp remove_overlap([claim_a | [claim_b | rest_claims]] = claims) do
-    if is_overlap?(claim_a, claim_b) do
-      IO.inspect(length(claims))
-      remove_overlap(rest_claims)
-    else
-      claims
-      |> Enum.shuffle()
-      |> remove_overlap()
+  # check overlaps with a claim that was overlapped by another claim
+  defp remove_overlap(other_claims, [claim_a | rest_overlaps]) do
+    {new_overlaps, left} =
+      other_claims
+      |> Enum.reduce({rest_overlaps, []}, fn claim_b, {overlaps_acc, left_acc} ->
+        if is_overlap?(claim_a, claim_b) do
+          {[claim_b | overlaps_acc], left_acc}
+        else
+          {overlaps_acc, [claim_b | left_acc]}
+        end
+      end)
+
+    remove_overlap(left, new_overlaps)
+  end
+
+  # randomly find a claim that overlaps with any other claim
+  defp remove_overlap([claim_a | rest_claims] = claims, []) do
+    case Enum.any?(rest_claims, fn claim_b -> is_overlap?(claim_a, claim_b) end) do
+      true ->
+        remove_overlap(rest_claims, [claim_a])
+
+      _ ->
+        claims
+        |> Enum.shuffle()
+        |> remove_overlap([])
     end
   end
 
-  defp is_overlap?({_, a}, {_, b}) do
-    within?(a, b) || within?(b, a)
-  end
+  defp is_overlap?({_, {x_a1, x_a2, y_a1, y_a2}}, {_, {x_b1, x_b2, y_b1, y_b2}}) do
+    cond do
+      x_a1 > x_b2 || x_b1 > x_a2 ->
+        false
 
-  defp within?({x_a1, x_a2, y_a1, y_a2}, {x_b1, x_b2, y_b1, y_b2}) do
-    ((x_a1 >= x_b1 && x_a1 <= x_b2) || (x_a2 >= x_b1 && x_a2 <= x_b2)) &&
-      ((y_a1 >= y_b1 && y_a1 <= y_b2) || (y_a2 >= y_b1 && y_a2 <= y_b2))
+      y_a2 < y_b1 || y_b2 < y_a1 ->
+        false
+
+      true ->
+        true
+    end
   end
 end
