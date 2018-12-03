@@ -20,5 +20,6 @@ defmodule AoC.Year2018.Day3Test do
     """
 
     assert 3 == no_overlap(input)
+    assert 3 == no_overlap2(input)
   end
 end
