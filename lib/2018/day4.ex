@@ -1,6 +1,34 @@
 defmodule AoC.Year2018.Day4 do
   def most(input) do
     input
+    |> sort_reduce()
+    |> Enum.max_by(fn {_, sleep_map} -> sleep_map |> Map.values() |> Enum.sum() end)
+    |> (fn {id, sleep_map} ->
+          sleep_map
+          |> Enum.max_by(fn {_min, times} -> times end)
+          |> Kernel.elem(0)
+          |> Kernel.*(id)
+        end).()
+  end
+
+  def most2(input) do
+    input
+    |> sort_reduce()
+    |> Enum.max_by(fn {_, sleep_map} ->
+      sleep_map
+      |> Enum.max_by(fn {_min, times} -> times end)
+      |> Kernel.elem(1)
+    end)
+    |> (fn {id, sleep_map} ->
+          sleep_map
+          |> Enum.max_by(fn {_min, times} -> times end)
+          |> Kernel.elem(0)
+          |> Kernel.*(id)
+        end).()
+  end
+
+  defp sort_reduce(input) do
+    input
     |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
       dt_str = String.slice(line, 1..16)
@@ -42,14 +70,7 @@ defmodule AoC.Year2018.Day4 do
           {nil, id, new_acc}
       end
     )
-    |> (fn {_, _, final_acc} -> final_acc end).()
-    |> Enum.max_by(fn {_, sleep_map} -> sleep_map |> Map.values() |> Enum.sum() end)
-    |> (fn {id, sleep_map} ->
-          sleep_map
-          |> Enum.max_by(fn {_min, times} -> times end)
-          |> Kernel.elem(0)
-          |> Kernel.*(id)
-        end).()
+    |> Kernel.elem(2)
   end
 
   defp extract_log("Guard #" <> rest_str) do
