@@ -71,4 +71,76 @@ defmodule AoC.Year2018.Day6 do
       Map.get(closest_map, boundary_pos) == id
     end)
   end
+
+  def safe(input, limit) do
+    points =
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn line ->
+        [x_str, y_str] = String.split(line, ", ", trim: true)
+
+        {
+          String.to_integer(x_str),
+          String.to_integer(y_str)
+        }
+      end)
+
+    {min_x, max_x} =
+      points
+      |> Enum.map(fn {x, _} -> x end)
+      |> Enum.min_max()
+
+    {min_y, max_y} =
+      points
+      |> Enum.map(fn {_, y} -> y end)
+      |> Enum.min_max()
+
+    min_x..max_x
+    |> Enum.flat_map(fn x ->
+      min_y..max_y
+      |> Enum.map(fn y -> {x, y} end)
+    end)
+    |> Enum.reduce(%{}, fn pos, acc ->
+      Map.put(acc, pos, total_dist(points, pos))
+    end)
+    |> Enum.reduce(0, fn
+      {pos, dist}, acc when dist < limit ->
+        {x, y} = pos
+        on_x_boundary? = x in [min_x, max_x]
+        on_y_boundary? = y in [min_y, max_y]
+
+        cond do
+          # corner
+          on_x_boundary? && on_y_boundary? ->
+            extension = div(limit - dist - 1, length(points))
+
+            extension..1
+            |> Enum.sum()
+            |> Kernel.+(extension)
+            |> Kernel.+(1)
+            |> Kernel.+(acc)
+
+          # edge
+          on_x_boundary? || on_y_boundary? ->
+            extension = div(limit - dist - 1, length(points))
+
+            acc + extension + 1
+
+          # inner
+          true ->
+            acc + 1
+        end
+
+      _, acc ->
+        acc
+    end)
+  end
+
+  defp total_dist(points, {x, y}) do
+    points
+    |> Enum.map(fn {px, py} ->
+      abs(px - x) + abs(py - y)
+    end)
+    |> Enum.sum()
+  end
 end

@@ -31,4 +31,17 @@ defmodule AoC.Year2018.Day6Test do
 
     assert 0 == largest(input2)
   end
+
+  test "safe" do
+    input1 = """
+    1, 1
+    1, 6
+    8, 3
+    3, 4
+    5, 5
+    8, 9
+    """
+
+    assert 16 == safe(input1, 32)
+  end
 end
