@@ -1,70 +1,104 @@
 defmodule AoC.Year2018.Day9 do
   defmodule CircleZipper do
+    @moduledoc """
+    A zipper for the circle in this puzzle.
+
+    `left` and `right` all goes from "center" (`focus`), aka. for a list
+    [1, 2, 3, 4, 5] with `focus` on `3`, `left` is `[2, 1]`, `right` is `[4, 5]`
+    """
+
     defstruct [
       :focus,
-      :counter_clockwise,
-      :clockwise
+      :left,
+      :right
     ]
 
     @type t :: %__MODULE__{
             focus: integer(),
-            counter_clockwise: list(integer()),
-            clockwise: list(integer())
+            left: list(integer()),
+            right: list(integer())
           }
   end
 
   def high_score(num_players, last_marble) do
-    init_circle = %CircleZipper{focus: 0, counter_clockwise: [], clockwise: []}
+    init_circle = %CircleZipper{focus: 0, left: [], right: []}
 
     1..num_players
     |> Stream.cycle()
     |> Stream.with_index(1)
     |> Stream.scan(
-      {List.duplicate(0, num_players), init_circle},
+      {:array.new(num_players, default: 0), init_circle},
       fn {player, marble}, {scores_acc, circle} ->
         {score, new_circle} = place_marble(marble, circle)
-        new_scores = List.update_at(scores_acc, player - 1, fn s -> s + score end)
+        # |> IO.inspect(charlists: :as_lists)
+
+        new_scores =
+          if score > 0 do
+            old_score = :array.get(player - 1, scores_acc)
+            :array.set(player - 1, old_score + score, scores_acc)
+          else
+            scores_acc
+          end
 
         {new_scores, new_circle}
       end
     )
     |> Enum.at(last_marble - 1)
     |> Kernel.elem(0)
+    |> :array.to_list()
     |> Enum.max()
   end
 
   @spec place_marble(integer(), CircleZipper.t()) :: {score :: integer(), CircleZipper.t()}
   defp place_marble(marble, circle) when rem(marble, 23) == 0 do
-    {left, [score_marble, new_focus | right]} =
-      Enum.split(circle.clockwise ++ circle.counter_clockwise, -7)
+    {score_marble, new_circle} =
+      if length(circle.left) >= 7 do
+        {right_head_rev, [new_focus, score_marble | t]} = Enum.split(circle.left, 5)
 
-    {marble + score_marble,
-     %CircleZipper{
-       focus: new_focus,
-       counter_clockwise: left,
-       clockwise: right ++ [circle.focus]
-     }}
+        new_circle = %CircleZipper{
+          focus: new_focus,
+          left: t,
+          right: Enum.reverse([circle.focus | right_head_rev]) ++ circle.right
+        }
+
+        {score_marble, new_circle}
+      else
+        counter_clockwise = circle.left ++ Enum.reverse(circle.right)
+
+        {right_head_rev, [new_focus, score_marble | t]} = Enum.split(counter_clockwise, 5)
+
+        new_circle = %CircleZipper{
+          focus: new_focus,
+          left: t,
+          right: Enum.reverse([circle.focus | right_head_rev])
+        }
+
+        {score_marble, new_circle}
+      end
+
+    {marble + score_marble, new_circle}
   end
 
   defp place_marble(marble, circle) do
-    case circle.clockwise do
-      [] ->
-        {left, right} = Enum.split(circle.counter_clockwise, 1)
+    new_circle =
+      case circle.right do
+        [] ->
+          [h | t] = Enum.reverse([circle.focus | circle.left])
 
-        {0,
-         %CircleZipper{
-           focus: marble,
-           counter_clockwise: left,
-           clockwise: right ++ [circle.focus]
-         }}
+          %CircleZipper{
+            focus: marble,
+            left: [h],
+            right: t
+          }
 
-      [h | t] ->
-        {0,
-         %CircleZipper{
-           focus: marble,
-           counter_clockwise: circle.counter_clockwise ++ [circle.focus, h],
-           clockwise: t
-         }}
-    end
+        [h | t] ->
+          %CircleZipper{
+            focus: marble,
+            left: [h, circle.focus | circle.left],
+            right: t
+          }
+      end
+
+    {0, new_circle}
   end
 end
