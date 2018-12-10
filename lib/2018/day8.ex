@@ -12,12 +12,17 @@ defmodule AoC.Year2018.Day8 do
 
   def sum(input) do
     input
+    |> build_tree()
+    |> sum_metadata()
+  end
+
+  defp build_tree(input) do
+    input
     |> String.trim()
     |> String.split(" ", trim: true)
     |> Enum.map(&String.to_integer/1)
     |> read_node()
     |> Kernel.elem(0)
-    |> sum_metadata()
   end
 
   @spec read_node(nonempty_list(integer())) :: {Node.t(), list(integer())}
@@ -41,7 +46,7 @@ defmodule AoC.Year2018.Day8 do
     {metadata, data_left} = Enum.split(data_rest, num_metadata)
 
     node = %Node{
-      children: children,
+      children: Enum.reverse(children),
       metadata: metadata
     }
 
@@ -57,5 +62,29 @@ defmodule AoC.Year2018.Day8 do
       Enum.into(node.children, rest),
       acc + Enum.sum(node.metadata)
     )
+  end
+
+  def value(input) do
+    input
+    |> build_tree()
+    |> calc_value()
+  end
+
+  defp calc_value(nil), do: 0
+
+  defp calc_value(node) do
+    case node.children do
+      [] ->
+        Enum.sum(node.metadata)
+
+      _ ->
+        node.metadata
+        |> Enum.map(fn idx ->
+          node.children
+          |> Enum.at(idx - 1)
+          |> calc_value()
+        end)
+        |> Enum.sum()
+    end
   end
 end
