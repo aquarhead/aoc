@@ -141,7 +141,7 @@ defmodule AoC.Year2018.Day7 do
   defp distribute_works(steps, workers, now, time_offset) do
     {new_workers, left_valid_steps} =
       Enum.reduce(
-        Enum.reverse(workers),
+        workers,
         {[], steps},
         fn
           {fin_time, _}, {workers_acc, [step | rest]} when fin_time <= now ->
