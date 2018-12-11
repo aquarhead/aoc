@@ -2,15 +2,43 @@ defmodule AoC.Year2018.Day11 do
   @map_size 300
 
   def largest(serial) do
-    for x <- 1..@map_size do
-      for y <- 1..@map_size do
-        pos = {x, y}
-        {pos, power_level(pos, serial)}
+    {{x, y}, _, _} =
+      for x <- 1..@map_size do
+        for y <- 1..@map_size do
+          pos = {x, y}
+          {pos, power_level(pos, serial)}
+        end
       end
-    end
-    |> List.flatten()
-    |> Enum.into(%{})
-    |> largest_square()
+      |> List.flatten()
+      |> Enum.into(%{})
+      |> largest_square(3)
+
+    "#{x},#{y}"
+  end
+
+  def largest_any(serial) do
+    map =
+      for x <- 1..@map_size do
+        for y <- 1..@map_size do
+          pos = {x, y}
+          {pos, power_level(pos, serial)}
+        end
+      end
+      |> List.flatten()
+      |> Enum.into(%{})
+
+    {{x, y}, size, _} =
+      Task.async_stream(
+        1..@map_size,
+        fn size ->
+          largest_square(map, size)
+        end,
+        timeout: :infinity
+      )
+      |> Enum.map(fn {:ok, res} -> res |> IO.inspect() end)
+      |> Enum.max_by(fn {_, _, sum} -> sum end)
+
+    "#{x},#{y},#{size}"
   end
 
   defp power_level({x, y}, serial) do
@@ -24,30 +52,31 @@ defmodule AoC.Year2018.Day11 do
     |> Kernel.-(5)
   end
 
-  @square_size 3
-  @offsets List.flatten(
-             for dx <- 0..(@square_size - 1) do
-               for dy <- 0..(@square_size - 1) do
-                 {dx, dy}
-               end
-             end
-           )
-
-  defp largest_square(map) do
-    for x <- 1..(@map_size - @square_size + 1) do
-      for y <- 1..(@map_size - @square_size + 1) do
-        pos = {x, y}
-
-        {pos, square_sum(map, pos)}
+  defp largest_square(map, size) do
+    offsets =
+      for dx <- 0..(size - 1) do
+        for dy <- 0..(size - 1) do
+          {dx, dy}
+        end
       end
-    end
-    |> List.flatten()
-    |> Enum.max_by(fn {_pos, sum} -> sum end)
-    |> Kernel.elem(0)
+      |> List.flatten()
+
+    {pos, sum} =
+      for x <- 1..(@map_size - size + 1) do
+        for y <- 1..(@map_size - size + 1) do
+          pos = {x, y}
+
+          {pos, square_sum(map, pos, offsets)}
+        end
+      end
+      |> List.flatten()
+      |> Enum.max_by(fn {_pos, sum} -> sum end)
+
+    {pos, size, sum}
   end
 
-  defp square_sum(map, {x, y}) do
-    for {dx, dy} <- @offsets do
+  defp square_sum(map, {x, y}, offsets) do
+    for {dx, dy} <- offsets do
       Map.get(map, {x + dx, y + dy}, nil)
     end
     |> Enum.sum()
