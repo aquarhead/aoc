@@ -16,15 +16,20 @@ defmodule AoC.Year2018.Day10 do
         }
       end)
     end)
-    |> Stream.drop_while(fn stars ->
+    |> Enum.reduce_while({nil, nil}, fn stars, {last_y_diff, last_stars} ->
       {min_y, max_y} =
         stars
         |> Enum.map(fn star -> star.y end)
         |> Enum.min_max()
 
-      max_y - min_y > 9
+      y_diff = max_y - min_y
+
+      if last_y_diff == nil || y_diff < last_y_diff do
+        {:cont, {y_diff, stars}}
+      else
+        {:halt, last_stars}
+      end
     end)
-    |> Enum.at(0)
     |> output()
 
     :ok
@@ -46,16 +51,20 @@ defmodule AoC.Year2018.Day10 do
 
       {sec + 1, new_stars}
     end)
-    |> Stream.drop_while(fn {_, stars} ->
+    |> Enum.reduce_while({nil, nil}, fn {sec, stars}, last_y_diff ->
       {min_y, max_y} =
         stars
         |> Enum.map(fn star -> star.y end)
         |> Enum.min_max()
 
-      max_y - min_y > 9
+      y_diff = max_y - min_y
+
+      if last_y_diff == nil || y_diff < last_y_diff do
+        {:cont, y_diff}
+      else
+        {:halt, sec - 1}
+      end
     end)
-    |> Enum.at(0)
-    |> Kernel.elem(0)
   end
 
   def output(stars) do
