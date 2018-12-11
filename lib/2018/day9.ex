@@ -10,18 +10,20 @@ defmodule AoC.Year2018.Day9 do
     defstruct [
       :focus,
       :left,
+      :left_len,
       :right
     ]
 
     @type t :: %__MODULE__{
             focus: integer(),
             left: list(integer()),
+            left_len: integer(),
             right: list(integer())
           }
   end
 
   def high_score(num_players, last_marble) do
-    init_circle = %CircleZipper{focus: 0, left: [], right: []}
+    init_circle = %CircleZipper{focus: 0, left: [], left_len: 0, right: []}
 
     1..num_players
     |> Stream.cycle()
@@ -30,7 +32,6 @@ defmodule AoC.Year2018.Day9 do
       {:array.new(num_players, default: 0), init_circle},
       fn {player, marble}, {scores_acc, circle} ->
         {score, new_circle} = place_marble(marble, circle)
-        # |> IO.inspect(charlists: :as_lists)
 
         new_scores =
           if score > 0 do
@@ -52,12 +53,13 @@ defmodule AoC.Year2018.Day9 do
   @spec place_marble(integer(), CircleZipper.t()) :: {score :: integer(), CircleZipper.t()}
   defp place_marble(marble, circle) when rem(marble, 23) == 0 do
     {score_marble, new_circle} =
-      if length(circle.left) >= 7 do
+      if circle.left_len >= 7 do
         {right_head_rev, [new_focus, score_marble | t]} = Enum.split(circle.left, 5)
 
         new_circle = %CircleZipper{
           focus: new_focus,
           left: t,
+          left_len: circle.left_len - 7,
           right: Enum.reverse([circle.focus | right_head_rev]) ++ circle.right
         }
 
@@ -70,6 +72,7 @@ defmodule AoC.Year2018.Day9 do
         new_circle = %CircleZipper{
           focus: new_focus,
           left: t,
+          left_len: length(t),
           right: Enum.reverse([circle.focus | right_head_rev])
         }
 
@@ -88,6 +91,7 @@ defmodule AoC.Year2018.Day9 do
           %CircleZipper{
             focus: marble,
             left: [h],
+            left_len: 1,
             right: t
           }
 
@@ -95,6 +99,7 @@ defmodule AoC.Year2018.Day9 do
           %CircleZipper{
             focus: marble,
             left: [h, circle.focus | circle.left],
+            left_len: circle.left_len + 2,
             right: t
           }
       end
