@@ -5,44 +5,7 @@ defmodule AoC.Year2018.Day10 do
 
   def message(input) do
     input
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
-      [pos_part, vel_part] = String.split(line, " velocity=<")
-
-      [head_x_str, y_str] = String.split(pos_part, ", ")
-
-      x =
-        head_x_str
-        |> String.slice(10..-1)
-        |> String.trim()
-        |> String.to_integer()
-
-      y =
-        y_str
-        |> String.slice(0..-2)
-        |> String.trim()
-        |> String.to_integer()
-
-      [vx_str, vy_str] = String.split(vel_part, ", ")
-
-      vx =
-        vx_str
-        |> String.trim()
-        |> String.to_integer()
-
-      vy =
-        vy_str
-        |> String.slice(0..-2)
-        |> String.trim()
-        |> String.to_integer()
-
-      %Star{
-        x: x,
-        y: y,
-        vx: vx,
-        vy: vy
-      }
-    end)
+    |> read_stars()
     |> Stream.iterate(fn stars ->
       Enum.map(stars, fn star ->
         %Star{
@@ -65,6 +28,34 @@ defmodule AoC.Year2018.Day10 do
     |> output()
 
     :ok
+  end
+
+  def wait(input) do
+    stars = read_stars(input)
+
+    Stream.iterate({0, stars}, fn {sec, stars} ->
+      new_stars =
+        Enum.map(stars, fn star ->
+          %Star{
+            x: star.x + star.vx,
+            y: star.y + star.vy,
+            vx: star.vx,
+            vy: star.vy
+          }
+        end)
+
+      {sec + 1, new_stars}
+    end)
+    |> Stream.drop_while(fn {_, stars} ->
+      {min_y, max_y} =
+        stars
+        |> Enum.map(fn star -> star.y end)
+        |> Enum.min_max()
+
+      max_y - min_y > 9
+    end)
+    |> Enum.at(0)
+    |> Kernel.elem(0)
   end
 
   def output(stars) do
@@ -133,5 +124,47 @@ defmodule AoC.Year2018.Day10 do
     position=<-3,  6> velocity=< 2, -1>
     """
     |> message()
+  end
+
+  defp read_stars(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line ->
+      [pos_part, vel_part] = String.split(line, " velocity=<")
+
+      [head_x_str, y_str] = String.split(pos_part, ", ")
+
+      x =
+        head_x_str
+        |> String.slice(10..-1)
+        |> String.trim()
+        |> String.to_integer()
+
+      y =
+        y_str
+        |> String.slice(0..-2)
+        |> String.trim()
+        |> String.to_integer()
+
+      [vx_str, vy_str] = String.split(vel_part, ", ")
+
+      vx =
+        vx_str
+        |> String.trim()
+        |> String.to_integer()
+
+      vy =
+        vy_str
+        |> String.slice(0..-2)
+        |> String.trim()
+        |> String.to_integer()
+
+      %Star{
+        x: x,
+        y: y,
+        vx: vx,
+        vy: vy
+      }
+    end)
   end
 end
