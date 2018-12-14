@@ -1,5 +1,6 @@
 defmodule AoC.Year2017.Day1Test do
   use ExUnit.Case
+  @moduletag finished: true
 
   alias AoC.Year2017.Day1
 

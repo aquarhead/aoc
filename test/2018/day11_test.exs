@@ -3,6 +3,7 @@ defmodule AoC.Year2018.Day11Test do
 
   import AoC.Year2018.Day11
 
+  @tag finished: true
   test "largest" do
     assert "33,45" == largest(18)
     assert "21,61" == largest(42)

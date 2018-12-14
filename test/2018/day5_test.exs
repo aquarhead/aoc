@@ -1,5 +1,6 @@
 defmodule AoC.Year2018.Day5Test do
   use ExUnit.Case
+  @moduletag finished: true
 
   import AoC.Year2018.Day5
 

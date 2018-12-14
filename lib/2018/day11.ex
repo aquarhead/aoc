@@ -41,6 +41,14 @@ defmodule AoC.Year2018.Day11 do
     "#{x},#{y},#{size}"
   end
 
+  defp prime_grid(serial) do
+    for y <- 1..@map_size do
+      for x <- 1..@map_size do
+        power_level({x, y}, serial)
+      end
+    end
+  end
+
   defp power_level({x, y}, serial) do
     x
     |> Kernel.+(10)
