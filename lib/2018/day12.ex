@@ -65,6 +65,8 @@ defmodule AoC.Year2018.Day12 do
       right: new_right
     }
     |> trim_empty()
+
+    # |> debug_output()
   end
 
   defp trim_empty(state) do
@@ -104,5 +106,70 @@ defmodule AoC.Year2018.Day12 do
       end)
 
     plus - minus
+  end
+
+  def sum2(input, gens) do
+    [init_str, rules_txt] = String.split(input, "\n\n", trim: true)
+    [_, init_state_str] = String.split(init_str, ": ")
+
+    init_state = %State{
+      left: [],
+      right: to_state_list(init_state_str)
+    }
+
+    rules =
+      rules_txt
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn line ->
+        [from, to] = String.split(line, " => ")
+
+        from = to_state_list(from)
+        to = to_state(to)
+
+        {from, to}
+      end)
+      |> Enum.into(%{})
+
+    {starting_step, offset, state} = find_pattern(init_state, rules, 0, [], nil)
+
+    num_alive = Enum.count(state.left ++ state.right, fn x -> x == :alive end)
+
+    (gens - starting_step) * num_alive * offset + do_sum(state)
+  end
+
+  defp debug_output(state) do
+    Enum.each(state.left ++ state.right, fn
+      :empty -> IO.write(".")
+      :alive -> IO.write("#")
+    end)
+
+    IO.puts("")
+
+    state
+  end
+
+  defp find_pattern(state, rules, step, last_trim, last_offset) do
+    new_state = evolve(state, rules)
+    {tc, offset} = trim_combined(new_state)
+
+    if tc == last_trim do
+      {step, offset - last_offset, state}
+    else
+      find_pattern(new_state, rules, step + 1, tc, offset)
+    end
+  end
+
+  defp trim_combined(state) do
+    t =
+      (state.left ++ state.right)
+      |> Enum.drop_while(fn x -> x == :empty end)
+      |> Enum.reverse()
+      |> Enum.drop_while(fn x -> x == :empty end)
+      |> Enum.reverse()
+
+    offset =
+      Enum.find_index(state.left ++ state.right, fn x -> x == :alive end) - length(state.left)
+
+    {t, offset}
   end
 end
