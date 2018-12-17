@@ -2,6 +2,7 @@ defmodule AoC.Year2018.Day13Test do
   use ExUnit.Case
 
   import AoC.Year2018.Day13
+  @moduletag finished: true
 
   test "crash" do
     input1 = """
@@ -26,5 +27,19 @@ defmodule AoC.Year2018.Day13Test do
     )
 
     assert {7, 3} == crash(input2)
+  end
+
+  test "crash_until" do
+    input = ~S(
+/>-<\
+|   |
+| /<+-\
+| | | v
+\>+</ |
+  |   ^
+  \<->/
+    )
+
+    assert {6, 4} == crash_until(input)
   end
 end

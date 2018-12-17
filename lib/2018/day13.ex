@@ -72,6 +72,33 @@ defmodule AoC.Year2018.Day13 do
   end
 
   def crash(input) do
+    {tracks, carts} = read_input(input)
+
+    Stream.repeatedly(fn -> nil end)
+    |> Enum.reduce_while(
+      carts,
+      fn _, in_carts ->
+        new_carts =
+          in_carts
+          # sort the carts
+          |> Enum.sort_by(
+            fn cart -> cart.pos end,
+            fn {x1, y1}, {x2, y2} ->
+              y1 < y2 || (y1 == y2 && x1 <= x2)
+            end
+          )
+          # run a tick
+          |> tick_carts(tracks)
+
+        case new_carts do
+          {:collision, pos} -> {:halt, pos}
+          new_carts -> {:cont, new_carts}
+        end
+      end
+    )
+  end
+
+  defp read_input(input) do
     {_, tracks, carts} =
       input
       |> String.split("\n", trim: true)
@@ -110,28 +137,7 @@ defmodule AoC.Year2018.Day13 do
         end
       )
 
-    Stream.repeatedly(fn -> nil end)
-    |> Enum.reduce_while(
-      carts,
-      fn _, in_carts ->
-        new_carts =
-          in_carts
-          # sort the carts
-          |> Enum.sort_by(
-            fn cart -> cart.pos end,
-            fn {x1, y1}, {x2, y2} ->
-              y1 < y2 || (y1 == y2 && x1 <= x2)
-            end
-          )
-          # run a tick
-          |> tick_carts(tracks)
-
-        case new_carts do
-          {:collision, pos} -> {:halt, pos}
-          new_carts -> {:cont, new_carts}
-        end
-      end
-    )
+    {tracks, carts}
   end
 
   # whitespace: no cart, no track
@@ -174,6 +180,58 @@ defmodule AoC.Year2018.Day13 do
     else
       turned_cart = Cart.turn(moved_cart, Map.get(tracks, moved_cart.pos))
       do_tick_carts([turned_cart | ticked_carts], rest_carts, tracks)
+    end
+  end
+
+  def crash_until(input) do
+    {tracks, carts} = read_input(input)
+
+    Stream.repeatedly(fn -> nil end)
+    |> Enum.reduce_while(
+      carts,
+      fn _, in_carts ->
+        new_carts =
+          in_carts
+          # sort the carts
+          |> Enum.sort_by(
+            fn cart -> cart.pos end,
+            fn {x1, y1}, {x2, y2} ->
+              y1 < y2 || (y1 == y2 && x1 <= x2)
+            end
+          )
+          # run a tick
+          |> tick_carts_remove_crash(tracks)
+
+        case new_carts do
+          [final_cart] -> {:halt, final_cart.pos}
+          new_carts -> {:cont, new_carts}
+        end
+      end
+    )
+  end
+
+  defp tick_carts_remove_crash(carts, tracks), do: do_tcrc([], carts, tracks)
+
+  defp do_tcrc(ticked_carts, [], _), do: ticked_carts
+
+  defp do_tcrc(ticked_carts, [cart | rest_carts], tracks) do
+    moved_cart = Cart.move(cart)
+
+    tc_idx = Enum.find_index(ticked_carts, fn cart -> cart.pos == moved_cart.pos end)
+    rc_idx = Enum.find_index(rest_carts, fn cart -> cart.pos == moved_cart.pos end)
+
+    case {tc_idx, rc_idx} do
+      {nil, nil} ->
+        turned_cart = Cart.turn(moved_cart, Map.get(tracks, moved_cart.pos))
+        do_tcrc([turned_cart | ticked_carts], rest_carts, tracks)
+
+      {idx, nil} ->
+        new_ticked_carts = List.delete_at(ticked_carts, idx)
+        do_tcrc(new_ticked_carts, rest_carts, tracks)
+
+      {nil, idx} ->
+        new_rest_carts = List.delete_at(rest_carts, idx)
+        do_tcrc(ticked_carts, new_rest_carts, tracks)
     end
   end
 end
