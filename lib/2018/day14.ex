@@ -6,7 +6,7 @@ defmodule AoC.Year2018.Day14 do
     |> Enum.join()
   end
 
-  def recipe_stream() do
+  defp recipe_stream() do
     Stream.resource(
       fn -> nil end,
       fn
@@ -51,5 +51,13 @@ defmodule AoC.Year2018.Day14 do
       end,
       fn _ -> nil end
     )
+  end
+
+  def find_pattern(pattern_str) do
+    ptn = pattern_str |> String.graphemes() |> Enum.map(&String.to_integer/1)
+
+    recipe_stream()
+    |> Stream.chunk_every(length(ptn), 1)
+    |> Enum.find_index(fn chunk -> chunk == ptn end)
   end
 end
