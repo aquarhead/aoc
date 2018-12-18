@@ -11,29 +11,38 @@ defmodule AoC.Year2018.Day14 do
       fn -> nil end,
       fn
         nil ->
-          first_acc = {[3, 7], 0, 1}
+          ary0 = :array.new()
+          ary1 = :array.set(0, 3, ary0)
+          ary = :array.set(1, 7, ary1)
+
+          first_acc = {ary, 0, 1}
           {[3, 7], first_acc}
 
-        {nums, idx1, idx2} ->
-          score1 = Enum.at(nums, idx1)
-          score2 = Enum.at(nums, idx2)
+        {ary, idx1, idx2} ->
+          score1 = :array.get(idx1, ary)
+          score2 = :array.get(idx2, ary)
 
           sum = score1 + score2
 
-          new_scores =
+          ary_size = :array.size(ary)
+
+          {new_scores, new_ary} =
             if sum >= 10 do
-              [1, sum - 10]
+              ary1 = :array.set(ary_size, 1, ary)
+              ary2 = :array.set(ary_size + 1, sum - 10, ary1)
+
+              {[1, sum - 10], ary2}
             else
-              [sum]
+              {[sum], :array.set(ary_size, sum, ary)}
             end
 
-          new_nums = nums ++ new_scores
+          new_size = :array.size(new_ary)
 
-          new_idx1 = Integer.mod(1 + score1 + idx1, length(new_nums))
-          new_idx2 = Integer.mod(1 + score2 + idx2, length(new_nums))
+          new_idx1 = Integer.mod(1 + score1 + idx1, new_size)
+          new_idx2 = Integer.mod(1 + score2 + idx2, new_size)
 
           next_acc = {
-            new_nums,
+            new_ary,
             new_idx1,
             new_idx2
           }
