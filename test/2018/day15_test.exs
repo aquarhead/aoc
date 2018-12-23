@@ -78,4 +78,30 @@ defmodule AoC.Year2018.Day15Test do
 
     assert 18740 = combat_outcome(input6)
   end
+
+  test "help_elves" do
+    input1 = """
+    #######
+    #.G...#
+    #...EG#
+    #.#.#G#
+    #..G#E#
+    #.....#
+    #######
+    """
+
+    assert 4988 = help_elves(input1)
+
+    input2 = """
+    #######
+    #E..EG#
+    #.#G.E#
+    #E.##E#
+    #G..#.#
+    #..E#.#
+    #######
+    """
+
+    assert 31284 = help_elves(input2)
+  end
 end

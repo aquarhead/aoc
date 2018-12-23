@@ -75,7 +75,7 @@ defmodule AoC.Year2018.Day15 do
     :ok
   end
 
-  defp read_input(input) do
+  defp read_input(input, elf_power \\ 3) do
     input
     |> String.split("\n", trim: true)
     |> Enum.with_index()
@@ -99,7 +99,7 @@ defmodule AoC.Year2018.Day15 do
             }
 
           ?E ->
-            elf = %Mob{race: :elf, attack: 3, hp: 200}
+            elf = %Mob{race: :elf, attack: elf_power, hp: 200}
 
             {
               Map.put(mobs_acc, {x, y}, elf),
@@ -305,4 +305,39 @@ defmodule AoC.Year2018.Day15 do
 
     do_reachable_map(new_rest, new_acc, new_map)
   end
+
+  def help_elves(input) do
+    {mobs0, _} = read_input(input)
+
+    num_elves = count_elves(mobs0)
+
+    Stream.iterate(4, &(&1 + 1))
+    |> Stream.map(fn elf_power ->
+      {pos_mobs, map} = read_input(input, elf_power)
+
+      Stream.iterate(0, fn x -> x + 1 end)
+      |> Enum.reduce_while(
+        {pos_mobs, map},
+        fn fin_rounds, {pos_mobs, map} ->
+          case play_round(pos_mobs, map) do
+            {:end, mobs_list} ->
+              {:halt, fin_rounds * hp_left(mobs_list)}
+
+            {new_mobs, _} = next_acc ->
+              case count_elves(new_mobs) do
+                ^num_elves -> {:cont, next_acc}
+                _ -> {:halt, :bad_power}
+              end
+          end
+        end
+      )
+    end)
+    |> Stream.drop_while(fn result ->
+      result == :bad_power
+    end)
+    |> Enum.at(0)
+  end
+
+  defp count_elves(pos_mobs),
+    do: Enum.count(pos_mobs, fn {_, %Mob{race: race}} -> race == :elf end)
 end
