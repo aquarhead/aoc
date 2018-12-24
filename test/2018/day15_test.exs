@@ -3,6 +3,8 @@ defmodule AoC.Year2018.Day15Test do
 
   import AoC.Year2018.Day15
 
+  @moduletag finished: true
+
   test "combat" do
     input1 = """
     #######
