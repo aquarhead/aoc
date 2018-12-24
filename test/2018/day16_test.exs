@@ -3,6 +3,8 @@ defmodule AoC.Year2018.Day16Test do
 
   import AoC.Year2018.Day16
 
+  @moduletag finished: true
+
   test "three_or_more" do
     input = """
     Before: [3, 2, 1, 1]
